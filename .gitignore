@@ -13,3 +13,10 @@ __pycache__/
 # Logs
 *.log
 logs/
+
+# Local Python environment (recreate: python3 -m venv venv && pip install …)
+venv/
+
+# Runtime state (scheduler memory, alert history — do not commit)
+task_log.json
+alert_log.txt

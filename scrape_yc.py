@@ -45,12 +45,35 @@ EXCLUDE_KEYWORDS = [
     "materials engineering", "manufacturing", "structures engineering",
     "community architect", "game builder", "sandbox game",
     # Location
-    "india", "bangalore", "remote (india",
-    # Research / ML
+    "india", "bangalore", "remote (india", "hyderabad", "pune", "mumbai",
+    "chennai", "delhi",
+    # Research / ML / Science
     "ml research", "ai/ml", "ai internship", "research intern",
+    "computational biology", "bioinformatics", "genomics", "clinical",
+    "wet lab", "laboratory", "biology intern", "biotech intern",
+    "life science", "drug discovery", "chemistry intern", "physics intern",
+    "neuroscience", "materials science",
     # Vague
     "technical intern",
 ]
+
+APPROVED_LOCATIONS = [
+    "san francisco", "bay area", "san jose", "palo alto", "mountain view",
+    "new york", "nyc", "brooklyn", "boston", "cambridge", "massachusetts",
+    "chicago", "illinois", "los angeles", "la", "culver city",
+    "austin", "texas", "seattle", "washington", "washington dc",
+    "denver", "colorado", "miami", "san diego", "nashville",
+    "toronto", "london", "paris", "amsterdam",
+    "remote", "united states", "usa", "us remote", "anywhere",
+]
+
+def is_approved_location(location):
+    if not location:
+        return True
+    loc = location.lower()
+    if any(r in loc for r in ["remote", "anywhere", "us remote", "worldwide"]):
+        return True
+    return any(a in loc for a in APPROVED_LOCATIONS)
 
 # Removed "product" from NAV_WORDS so Product Manager Intern gets through
 NAV_WORDS = {
@@ -257,6 +280,22 @@ with sync_playwright() as p:
                 continue
 
             company, notes = get_job_details(context, full_link)
+
+            # Location filter — extract from notes
+            location = ""
+            if "📍" in notes:
+                loc_part = notes.split("📍")[1].split("|")[0].strip()
+                location = loc_part
+            # If no location scraped, check if India keywords in notes or title
+            if not location:
+                combined = (notes + " " + title).lower()
+                if any(kw in combined for kw in ["india", "bangalore", "hyderabad", "pune", "mumbai", "chennai", "delhi"]):
+                    skipped += 1
+                    continue
+            if location and not is_approved_location(location):
+                skipped += 1
+                continue
+
             success = add_to_notion(company, title, full_link, notes)
             if success:
                 print(f"  ✅ {company} — {title}")
