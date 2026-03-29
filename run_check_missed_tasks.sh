@@ -5,4 +5,4 @@ if [[ -f venv/bin/activate ]]; then
   # shellcheck source=/dev/null
   source venv/bin/activate
 fi
-exec python3 check_missed_tasks.py
+exec python3 automation/check_missed_tasks.py

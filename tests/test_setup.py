@@ -1,6 +1,6 @@
 """
 Checks that files and the Mac scheduler hook are set up correctly.
-Run: python3 -m unittest test_setup -v
+Run: python3 -m unittest discover -s tests -v
 """
 import os
 import subprocess
@@ -8,7 +8,8 @@ import sys
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parent.parent
+AUT = REPO / "automation"
 PLIST_NAME = "com.zoelie.opportunity-tracker.check-missed-tasks.plist"
 LAUNCH_AGENT_LABEL = "com.zoelie.opportunity-tracker.check-missed-tasks"
 
@@ -17,11 +18,12 @@ class TestFilesAndScripts(unittest.TestCase):
     """These pass if the project folder has everything it needs."""
 
     def test_main_scripts_exist(self):
-        self.assertTrue((REPO / "check_missed_tasks.py").is_file(), "Missing check_missed_tasks.py")
+        self.assertTrue((REPO / "paths.py").is_file(), "Missing paths.py")
+        self.assertTrue((AUT / "check_missed_tasks.py").is_file(), "Missing automation/check_missed_tasks.py")
         self.assertTrue((REPO / "run_check_missed_tasks.sh").is_file(), "Missing run_check_missed_tasks.sh")
-        self.assertTrue((REPO / "run_all.py").is_file(), "Missing run_all.py")
-        self.assertTrue((REPO / "newsletter.py").is_file(), "Missing newsletter.py")
-        self.assertTrue((REPO / "error_monitor.py").is_file(), "Missing error_monitor.py")
+        self.assertTrue((AUT / "run_all.py").is_file(), "Missing automation/run_all.py")
+        self.assertTrue((AUT / "newsletter.py").is_file(), "Missing automation/newsletter.py")
+        self.assertTrue((AUT / "error_monitor.py").is_file(), "Missing automation/error_monitor.py")
 
     def test_launch_agent_files_exist(self):
         self.assertTrue((REPO / PLIST_NAME).is_file(), f"Missing {PLIST_NAME}")

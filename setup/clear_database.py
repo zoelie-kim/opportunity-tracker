@@ -1,9 +1,11 @@
 """Delete all pages from configured Notion databases (destructive; used for resets)."""
 import os
+from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 TOKEN = os.environ["NOTION_TOKEN"]
 JOBS_DB = os.environ["NOTION_DATABASE_ID"]

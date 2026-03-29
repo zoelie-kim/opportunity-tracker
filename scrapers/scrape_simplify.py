@@ -3,11 +3,13 @@ import os
 import re
 import httpx
 import time
+from pathlib import Path
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from datetime import date
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 DATABASE_ID = os.environ["NOTION_DATABASE_ID"]

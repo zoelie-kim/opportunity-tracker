@@ -1,6 +1,12 @@
 """Unit tests for schedule / catch-up logic in check_missed_tasks.py."""
+import sys
 import unittest
 from datetime import date, datetime, time, timedelta
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+sys.path.insert(0, str(_ROOT / "automation"))
 
 from check_missed_tasks import missed_slot_pending, newsletter_due, parse_last_run, TASKS
 

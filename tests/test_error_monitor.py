@@ -1,7 +1,12 @@
 """Tests for error_monitor log scanning and newsletter HTML."""
+import sys
 import unittest
-
 from datetime import datetime
+from pathlib import Path
+
+_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT))
+sys.path.insert(0, str(_ROOT / "automation"))
 
 from error_monitor import format_health_html, line_looks_like_error
 

@@ -2,11 +2,13 @@
 import os
 import time
 import httpx
+from pathlib import Path
 from dotenv import load_dotenv
 from datetime import date
 from playwright.sync_api import sync_playwright
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 DATABASE_ID = os.environ["NOTION_DATABASE_ID"]

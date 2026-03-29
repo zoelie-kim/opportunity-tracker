@@ -3,7 +3,7 @@
 Plain-language check: are the files here, and is the Mac's scheduler watching this project?
 
 Run from the project folder:
-  python3 verify_setup.py
+  python3 automation/verify_setup.py
 
 This does not send email or run scrapers — it only looks at files and (on a Mac) asks the system
 whether your repeating task is registered.
@@ -15,7 +15,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent
+REPO = Path(__file__).resolve().parent.parent
+AUT = REPO / "automation"
 PLIST = REPO / "com.zoelie.opportunity-tracker.check-missed-tasks.plist"
 LABEL = "com.zoelie.opportunity-tracker.check-missed-tasks"
 
@@ -29,12 +30,12 @@ def main() -> int:
 
     # 1) Files
     need = [
-        ("The small program that decides what to run", REPO / "check_missed_tasks.py"),
+        ("The small program that decides what to run", AUT / "check_missed_tasks.py"),
         ("The one-line launcher the Mac calls", REPO / "run_check_missed_tasks.sh"),
         ("The instructions file for the Mac scheduler", PLIST),
-        ("The full scrape script", REPO / "run_all.py"),
-        ("The weekly email builder", REPO / "newsletter.py"),
-        ("The log scanner for the health section", REPO / "error_monitor.py"),
+        ("The full scrape script", AUT / "run_all.py"),
+        ("The weekly email builder", AUT / "newsletter.py"),
+        ("The log scanner for the health section", AUT / "error_monitor.py"),
     ]
     for label, p in need:
         if p.is_file():

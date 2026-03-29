@@ -1,9 +1,11 @@
 """One-time Notion API setup: create or update jobs, programs, and events database schemas."""
 import os
+from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 TOKEN = os.environ["NOTION_TOKEN"]
 JOBS_DB = os.environ["NOTION_DATABASE_ID"]

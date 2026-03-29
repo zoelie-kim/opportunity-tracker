@@ -8,9 +8,11 @@ import httpx
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import date, datetime
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 PROGRAMS_DB = os.environ["NOTION_PROGRAMS_DB_ID"]
@@ -38,7 +40,7 @@ def send_email(subject, body_html):
 def log_alert(program_name, alert_text):
     """Append alert to alert_log.txt for newsletter inclusion"""
     try:
-        with open("alert_log.txt", "a") as f:
+        with open(REPO_ROOT / "alert_log.txt", "a", encoding="utf-8") as f:
             f.write(f"{date.today().isoformat()} | {program_name} | {alert_text}\n")
     except Exception as e:
         print(f"  ⚠️ Failed to log alert: {e}")

@@ -13,24 +13,29 @@ import sys
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-TASK_LOG = SCRIPT_DIR / "task_log.json"
-SCHEDULER_LOCK = SCRIPT_DIR / ".check_missed_tasks.lock"
+_REPO = Path(__file__).resolve().parent.parent
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+from paths import REPO_ROOT
+
+AUTOMATION = Path(__file__).resolve().parent
+TASK_LOG = REPO_ROOT / "task_log.json"
+SCHEDULER_LOCK = REPO_ROOT / ".check_missed_tasks.lock"
 
 # Python weekday(): Monday=0 … Sunday=6. (hour, minute) local time.
 TASKS = {
     "run_all": {
-        "script": SCRIPT_DIR / "run_all.py",
+        "script": AUTOMATION / "run_all.py",
         "schedule": [(1, 10, 0), (4, 10, 0)],  # Tue & Fri 10:00
         "description": "Full scraper run",
     },
     "countdown_alerts": {
-        "script": SCRIPT_DIR / "countdown_alerts.py",
+        "script": AUTOMATION / "countdown_alerts.py",
         "schedule": [(d, 10, 0) for d in range(7)],  # every day 10:00
         "description": "Countdown alerts",
     },
     "newsletter": {
-        "script": SCRIPT_DIR / "newsletter.py",
+        "script": AUTOMATION / "newsletter.py",
         "schedule": [(6, 17, 0)],  # Sunday 17:00
         "description": "Weekly newsletter",
     },
@@ -148,7 +153,7 @@ def run_task(task_key, task_config):
         print(f"  ▶️  Running {task_config['description']}...")
         result = subprocess.run(
             [sys.executable, str(script)],
-            cwd=str(SCRIPT_DIR),
+            cwd=str(REPO_ROOT),
             capture_output=True,
             timeout=3600,
         )

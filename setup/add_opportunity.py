@@ -1,10 +1,12 @@
 """CLI helper to insert a single job or program entry into Notion with structured fields."""
 import os
+from pathlib import Path
 import httpx
 from dotenv import load_dotenv
 from datetime import date
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 JOBS_DB = os.environ["NOTION_DATABASE_ID"]

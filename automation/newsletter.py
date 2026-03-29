@@ -6,6 +6,7 @@ falls back to a rolling 7-day window.
 """
 import json
 import os
+import sys
 import httpx
 import smtplib
 from email.mime.text import MIMEText
@@ -14,12 +15,15 @@ from datetime import date, datetime, time, timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 
+_REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_REPO))
+from paths import REPO_ROOT
+
+load_dotenv(REPO_ROOT / ".env")
+
 from error_monitor import build_weekly_health_html
 
-load_dotenv()
-
-SCRIPT_DIR = Path(__file__).resolve().parent
-TASK_LOG_PATH = SCRIPT_DIR / "task_log.json"
+TASK_LOG_PATH = REPO_ROOT / "task_log.json"
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
@@ -120,7 +124,7 @@ def parse_date(date_obj):
 def read_alert_log_on_or_after(start: date):
     """Reminder lines in alert_log.txt whose date is >= ``start``."""
     alerts = []
-    path = SCRIPT_DIR / "alert_log.txt"
+    path = REPO_ROOT / "alert_log.txt"
     try:
         with open(path, "r", encoding="utf-8") as f:
             lines = f.readlines()

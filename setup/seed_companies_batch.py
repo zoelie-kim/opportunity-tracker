@@ -1,8 +1,11 @@
 """Second batch of company rows for the Notion companies database."""
 import os
+from pathlib import Path
 import httpx
 from dotenv import load_dotenv
-load_dotenv()
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 TOKEN = os.environ["NOTION_TOKEN"]
 COMPANIES_DB = os.environ["NOTION_COMPANIES_DB_ID"]

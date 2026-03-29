@@ -12,18 +12,32 @@
 - **Playwright** — browser automation where pages need a real browser
 - **Notion** — jobs database, companies/programs as configured in your workspace
 - **Gmail (app password)** — outbound email
-- **macOS `launchd`** — repeating “what’s due?” checks (`check_missed_tasks.py`)
+- **macOS `launchd`** — repeating “what’s due?” checks (`automation/check_missed_tasks.py`)
+
+---
+
+## Folder layout
+
+| Folder | Contents |
+|--------|----------|
+| **`automation/`** | Scheduler (`check_missed_tasks.py`), `run_all.py`, `newsletter.py`, `countdown_alerts.py`, `error_monitor.py`, `verify_setup.py` |
+| **`scrapers/`** | `scrape_yc.py`, `scrape_simplify.py`, `scrape_companies.py` |
+| **`setup/`** | One-time Notion bootstrap: `setup_all.py`, `seed_*.py`, `add_*.py`, `clear_database.py`, etc. |
+| **`tests/`** | `unittest` modules for schedule logic, error monitor, and setup checks |
+| **Repo root** | `.env`, `paths.py` (repo root constant), `task_log.json`, logs, `run_check_missed_tasks.sh`, plist, `install_launch_agent.sh` |
+
+Data files (`task_log.json`, `alert_log.txt`, `scraper.log`, `logs/`) stay at the **project root** so paths stay stable for `launchd`.
 
 ---
 
 ## Architecture (high level)
 
-1. **Scrapers** (`scrape_yc.py`, `scrape_simplify.py`, `scrape_companies.py`) — fetch or drive listings, filter, write to Notion.
-2. **`run_all.py`** — runs the three scrapers in order; logs to `scraper.log`.
-3. **`countdown_alerts.py`** — reads program deadlines from Notion, sends reminder emails, appends lines to `alert_log.txt` for the newsletter.
-4. **`newsletter.py`** — builds the digest email: new roles (Notion **Date Added**), `alert_log.txt` lines, and **`error_monitor`** log lines. After the first run, content is scoped **since the previous successful digest** via `task_log.json` → `newsletter` (not a blind rolling 7-day window from “today”).
-5. **`check_missed_tasks.py`** — decides what’s due (time slots + `task_log.json`), runs `run_all`, `countdown_alerts`, and `newsletter` when appropriate. Uses a **file lock** (`.check_missed_tasks.lock`) so overlapping `launchd` runs can’t send duplicate emails. The **weekly digest** is only scheduled for **Sunday after 5pm** (local time), with **Monday** as catch-up if Sunday was missed—not Tuesday–Saturday, so it won’t fire on the wrong night.
-6. **`install_launch_agent.sh` + `.plist`** — register the checker with macOS so it runs on login, on an interval, and at calendar times.
+1. **Scrapers** (`scrapers/`) — fetch or drive listings, filter, write to Notion.
+2. **`automation/run_all.py`** — runs the three scrapers in order; logs to `scraper.log` at repo root.
+3. **`automation/countdown_alerts.py`** — reads program deadlines from Notion, sends reminder emails, appends lines to `alert_log.txt` for the newsletter.
+4. **`automation/newsletter.py`** — builds the digest email: new roles (Notion **Date Added**), `alert_log.txt` lines, and **`error_monitor`** log lines. After the first run, content is scoped **since the previous successful digest** via `task_log.json` → `newsletter`.
+5. **`automation/check_missed_tasks.py`** — decides what’s due (time slots + `task_log.json`), runs the scripts above on schedule. Uses a **file lock** so overlapping `launchd` runs can’t send duplicate emails. The **weekly digest** is only for **Sunday after 5pm** (local), with **Monday** catch-up if Sunday was missed.
+6. **`install_launch_agent.sh` + `.plist`** — register the checker with macOS.
 
 Nothing runs in the cloud unless you add that yourself; if the Mac was asleep, the next run **catches up** missed slots.
 
@@ -32,38 +46,25 @@ Nothing runs in the cloud unless you add that yourself; if the Mac was asleep, t
 ## Setup (short)
 
 1. Clone the repo, create a venv, install dependencies (Playwright, httpx, python-dotenv, beautifulsoup4, etc.—match your imports).
-2. Create a `.env` file with your Notion tokens, database IDs, Gmail app password, and any scraper credentials.
+2. Create a `.env` file at the **repo root** with your Notion tokens, database IDs, Gmail app password, and any scraper credentials.
 3. Run **`./install_launch_agent.sh`** once so `launchd` loads the LaunchAgent.
-4. Optional: **`python3 verify_setup.py`** — confirms files exist and the scheduler registered the job.
+4. Optional: **`python3 automation/verify_setup.py`** — confirms files exist and the scheduler registered the job.
 
 ---
 
 ## Useful commands
 
+Run these from the **repository root** (where `.env` lives).
+
 | Command | Purpose |
 |--------|---------|
-| `python3 verify_setup.py` | Friendly check: files + scheduler registration |
-| `python3 -m unittest discover -v` | Tests (schedule logic + setup) |
-| `python3 check_missed_tasks.py --dry-run` | Show what would run; no side effects |
-| `python3 run_all.py` | Full scrape only |
-| `python3 newsletter.py` | Send digest manually (needs env + data) |
+| `python3 automation/verify_setup.py` | Friendly check: files + scheduler registration |
+| `python3 -m unittest discover -s tests -v` | All tests |
+| `python3 automation/check_missed_tasks.py --dry-run` | Show what would run; no side effects |
+| `python3 automation/run_all.py` | Full scrape only |
+| `python3 automation/newsletter.py` | Send digest manually (needs env + data) |
 
 Logs (ignored by git): `scraper.log`, `logs/`, `task_log.json`, `alert_log.txt`.
-
----
-
-## Repo layout (main scripts)
-
-| File | Role |
-|------|------|
-| `run_all.py` | Chains all scrapers |
-| `check_missed_tasks.py` | Due-date logic + runs other scripts on schedule |
-| `countdown_alerts.py` | Deadline emails + `alert_log.txt` lines |
-| `newsletter.py` | Weekly HTML email (jobs + alerts + **error_monitor**) |
-| `error_monitor.py` | Reads `scraper.log` + `logs/*.log`; builds the “system health” block in the newsletter |
-| `install_launch_agent.sh` | Installs LaunchAgent plist into `~/Library/LaunchAgents/` |
-
-Setup/seed scripts (`setup_all.py`, `seed_*.py`, etc.) are for one-time Notion schema or data bootstrapping.
 
 ---
 

@@ -3,6 +3,7 @@ import os
 import re
 import httpx
 import time
+from pathlib import Path
 from datetime import date
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
@@ -18,7 +19,8 @@ except Exception:
     except Exception:
         STEALTH = False
 
-load_dotenv()
+REPO_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(REPO_ROOT / ".env")
 
 NOTION_TOKEN = os.environ["NOTION_TOKEN"]
 JOBS_DB = os.environ["NOTION_DATABASE_ID"]

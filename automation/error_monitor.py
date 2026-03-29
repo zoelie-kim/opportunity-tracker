@@ -6,11 +6,15 @@ for a short “system health” section.
 from __future__ import annotations
 
 import re
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-LOGS_DIR = SCRIPT_DIR / "logs"
+_REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_REPO))
+from paths import REPO_ROOT
+
+LOGS_DIR = REPO_ROOT / "logs"
 
 # Timestamps written by run_all / check_missed_tasks style loggers
 _TS = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
@@ -38,7 +42,7 @@ def line_looks_like_error(line: str) -> bool:
 
 def _discover_log_paths() -> list[Path]:
     out: list[Path] = []
-    root = SCRIPT_DIR / "scraper.log"
+    root = REPO_ROOT / "scraper.log"
     if root.is_file():
         out.append(root)
     if LOGS_DIR.is_dir():

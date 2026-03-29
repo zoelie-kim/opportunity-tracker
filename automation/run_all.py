@@ -1,42 +1,50 @@
-"""Run the three scrapers in order and append status lines to scraper.log."""
+"""Run the three scrapers in order and append status lines to scraper.log at repo root."""
+import os
 import subprocess
 import sys
-import os
 from datetime import datetime
+from pathlib import Path
 
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
+_REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_REPO))
+from paths import REPO_ROOT
 
-LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scraper.log")
+SCRAPERS = REPO_ROOT / "scrapers"
+LOG_FILE = REPO_ROOT / "scraper.log"
+
 
 def log(msg):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{timestamp}] {msg}"
     print(line)
-    with open(LOG_FILE, "a") as f:
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
-def run_scraper(script):
-    log(f"Starting {script}...")
+
+def run_scraper(filename: str):
+    script = SCRAPERS / filename
+    log(f"Starting {filename}...")
     try:
         result = subprocess.run(
-            [sys.executable, script],
+            [sys.executable, str(script)],
+            cwd=str(REPO_ROOT),
             capture_output=True,
             text=True,
-            timeout=300
+            timeout=300,
         )
         if result.returncode == 0:
-            log(f"✅ {script} completed")
-            # Log last line of output (usually the summary)
+            log(f"✅ {filename} completed")
             lines = [l for l in result.stdout.strip().split("\n") if l.strip()]
             if lines:
                 log(f"   {lines[-1]}")
         else:
-            log(f"❌ {script} failed")
+            log(f"❌ {filename} failed")
             log(f"   {result.stderr.strip()[:200]}")
     except subprocess.TimeoutExpired:
-        log(f"❌ {script} timed out after 5 minutes")
+        log(f"❌ {filename} timed out after 5 minutes")
     except Exception as e:
-        log(f"❌ {script} error: {str(e)}")
+        log(f"❌ {filename} error: {str(e)}")
+
 
 log("=" * 50)
 log("🚀 Opportunity Tracker — starting full scrape run")
