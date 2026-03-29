@@ -1,3 +1,4 @@
+"""One-time Notion patch: add Ashby as a platform option on the companies database."""
 import os
 import httpx
 from dotenv import load_dotenv

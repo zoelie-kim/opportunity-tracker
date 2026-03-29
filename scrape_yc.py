@@ -1,3 +1,4 @@
+"""Scrape Y Combinator job listings with Playwright, filter roles/locations, sync to Notion."""
 import os
 import time
 import httpx

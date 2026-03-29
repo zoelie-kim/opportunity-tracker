@@ -1,5 +1,6 @@
 #!/bin/bash
-# One-time: install the LaunchAgent so schedules run after login, on an interval, and at calendar times.
+# Copies the LaunchAgent plist into ~/Library/LaunchAgents and loads it with launchctl
+# so macOS runs check_missed_tasks on login, every 15 minutes, and at set clock times.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 PLIST_SRC="$ROOT/com.zoelie.opportunity-tracker.check-missed-tasks.plist"

@@ -1,3 +1,4 @@
+"""Batch-add company rows to the Notion companies database for scraping."""
 import os
 import httpx
 from dotenv import load_dotenv

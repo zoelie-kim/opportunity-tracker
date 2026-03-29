@@ -1,3 +1,4 @@
+"""CLI helper to insert a single job or program entry into Notion with structured fields."""
 import os
 import httpx
 from dotenv import load_dotenv

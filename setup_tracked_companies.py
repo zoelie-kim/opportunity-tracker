@@ -1,3 +1,4 @@
+"""Configure which companies appear in the companies database for career-page scraping."""
 import os
 import httpx
 from dotenv import load_dotenv

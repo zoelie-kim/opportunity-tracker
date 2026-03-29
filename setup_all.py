@@ -1,3 +1,4 @@
+"""One-time Notion API setup: create or update jobs, programs, and events database schemas."""
 import os
 import httpx
 from dotenv import load_dotenv

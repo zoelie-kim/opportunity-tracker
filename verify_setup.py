@@ -33,6 +33,8 @@ def main() -> int:
         ("The one-line launcher the Mac calls", REPO / "run_check_missed_tasks.sh"),
         ("The instructions file for the Mac scheduler", PLIST),
         ("The full scrape script", REPO / "run_all.py"),
+        ("The weekly email builder", REPO / "newsletter.py"),
+        ("The log scanner for the health section", REPO / "error_monitor.py"),
     ]
     for label, p in need:
         if p.is_file():

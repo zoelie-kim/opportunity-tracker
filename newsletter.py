@@ -1,3 +1,7 @@
+"""
+Weekly HTML email: new Notion roles from the last 7 days, program reminder lines from
+alert_log.txt, and a “system health” block from error_monitor (recent log failures).
+"""
 import os
 import httpx
 import smtplib
@@ -5,6 +9,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import date, datetime, timedelta
 from dotenv import load_dotenv
+
+from error_monitor import build_weekly_health_html
 
 load_dotenv()
 
@@ -92,8 +98,8 @@ def read_alert_log():
     
     return sorted(alerts, key=lambda x: x["date"], reverse=True)
 
-def format_html(jobs, alerts):
-    """Generate HTML for newsletter"""
+def format_html(jobs, alerts, health_html: str):
+    """Generate HTML for newsletter."""
     
     week_start = (date.today() - timedelta(days=6)).strftime("%b %d")
     week_end = date.today().strftime("%b %d, %Y")
@@ -161,6 +167,7 @@ def format_html(jobs, alerts):
             <h1 style="color: #1a1a1a; margin-top: 0;">📊 Weekly Opportunity Digest</h1>
             <p style="color: #666; font-size: 14px;">Week of {week_start} – {week_end}</p>
             
+            {health_html}
             {jobs_html}
             {alerts_html}
             
@@ -176,18 +183,20 @@ def format_html(jobs, alerts):
 
 def main():
     print("\n📊 Generating Sunday newsletter...\n")
-    
+
+    health_html, err_count = build_weekly_health_html()
     jobs = get_jobs_from_past_7_days()
     alerts = read_alert_log()
-    
+
+    print(f"  Health: {err_count} error line(s) in logs (past 7 days)")
     print(f"  Found {len(jobs)} new roles")
     print(f"  Found {len(alerts)} reminder alerts")
-    
-    if not jobs and not alerts:
-        print("\n  ⚠️ No jobs or alerts this week — skipping newsletter\n")
+
+    if not jobs and not alerts and err_count == 0:
+        print("\n  ⚠️ No jobs, alerts, or log issues — skipping newsletter\n")
         return
-    
-    html = format_html(jobs, alerts)
+
+    html = format_html(jobs, alerts, health_html)
     send_email("Weekly Digest", html)
     print()
 

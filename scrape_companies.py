@@ -1,3 +1,4 @@
+"""For each tracked company in Notion, scrape careers pages (Playwright) for target roles."""
 import os
 import re
 import httpx

@@ -1,3 +1,4 @@
+"""Run the three scrapers in order and append status lines to scraper.log."""
 import subprocess
 import sys
 import os

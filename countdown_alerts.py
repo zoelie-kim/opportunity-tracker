@@ -1,3 +1,7 @@
+"""
+Email reminders for upcoming program deadlines from Notion; append a line per alert to
+alert_log.txt for inclusion in the weekly newsletter.
+"""
 import os
 import smtplib
 import httpx

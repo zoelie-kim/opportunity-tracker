@@ -1,3 +1,4 @@
+"""Delete all pages from configured Notion databases (destructive; used for resets)."""
 import os
 import httpx
 from dotenv import load_dotenv

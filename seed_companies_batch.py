@@ -1,3 +1,4 @@
+"""Second batch of company rows for the Notion companies database."""
 import os
 import httpx
 from dotenv import load_dotenv

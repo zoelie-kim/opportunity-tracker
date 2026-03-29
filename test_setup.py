@@ -20,6 +20,8 @@ class TestFilesAndScripts(unittest.TestCase):
         self.assertTrue((REPO / "check_missed_tasks.py").is_file(), "Missing check_missed_tasks.py")
         self.assertTrue((REPO / "run_check_missed_tasks.sh").is_file(), "Missing run_check_missed_tasks.sh")
         self.assertTrue((REPO / "run_all.py").is_file(), "Missing run_all.py")
+        self.assertTrue((REPO / "newsletter.py").is_file(), "Missing newsletter.py")
+        self.assertTrue((REPO / "error_monitor.py").is_file(), "Missing error_monitor.py")
 
     def test_launch_agent_files_exist(self):
         self.assertTrue((REPO / PLIST_NAME).is_file(), f"Missing {PLIST_NAME}")

@@ -1,3 +1,4 @@
+"""Batch-add program rows to the Notion programs database (deadlines, links)."""
 import os
 import httpx
 from dotenv import load_dotenv

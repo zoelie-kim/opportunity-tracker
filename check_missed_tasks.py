@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """
-Runs scheduled jobs when their slot time has passed and the job has not run since that slot.
-If the Mac was off at 10:00 Tuesday, the next time this script runs after 10:00 (login, interval,
-or wake) it will see a missed slot and execute.
-
-Keep task_log.json — it stores last successful completion per task (ISO local datetime).
+Decide which automation scripts are due (scrape bundle, daily alerts, Sunday newsletter),
+run them once each, and record last success times in task_log.json. Intended to be invoked
+by macOS launchd; catch-up runs if a slot was missed while the machine was off.
 """
 import json
 import subprocess

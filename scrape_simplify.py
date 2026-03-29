@@ -1,3 +1,4 @@
+"""Parse the SimplifyJobs internship README from GitHub and add matching rows to Notion."""
 import os
 import re
 import httpx
