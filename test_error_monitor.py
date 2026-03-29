@@ -19,8 +19,8 @@ class TestErrorHeuristics(unittest.TestCase):
 
 class TestHealthHtml(unittest.TestCase):
     def test_empty_is_green(self):
-        html = format_health_html([])
-        self.assertIn("No errors", html)
+        html = format_health_html([], "since last digest")
+        self.assertIn("System health (0 issues)", html)
         self.assertIn("#e8f5e9", html)
 
     def test_with_events(self):
@@ -31,7 +31,8 @@ class TestHealthHtml(unittest.TestCase):
                     "time": datetime(2026, 3, 1, 10, 0, 0),
                     "text": "❌ x failed",
                 }
-            ]
+            ],
+            "since last digest",
         )
         self.assertIn("System health", html)
         self.assertIn("scraper.log", html)

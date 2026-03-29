@@ -2,7 +2,7 @@
 import unittest
 from datetime import date, datetime, time, timedelta
 
-from check_missed_tasks import missed_slot_pending, parse_last_run, TASKS
+from check_missed_tasks import missed_slot_pending, newsletter_due, parse_last_run, TASKS
 
 
 class TestParseLastRun(unittest.TestCase):
@@ -47,17 +47,25 @@ class TestMissedSlotPending(unittest.TestCase):
         sched = TASKS["run_all"]["schedule"]
         self.assertTrue(missed_slot_pending(last, sched, now))
 
-    def test_newsletter_sunday_5pm_catch_up_monday(self):
-        # Sunday 2026-03-22 17:00 slot; Monday 09:00, never ran newsletter
+    def test_newsletter_monday_catch_up_after_missed_sunday(self):
+        # Monday 09:00; missed Sunday 2026-03-22 17:00
         now = datetime(2026, 3, 23, 9, 0, 0)
-        sched = TASKS["newsletter"]["schedule"]
-        self.assertTrue(missed_slot_pending(None, sched, now))
+        self.assertTrue(newsletter_due(None, now))
 
     def test_newsletter_not_due_before_sunday_5pm(self):
         now = datetime(2026, 3, 22, 16, 0, 0)  # Sunday 4pm
         last = datetime(2026, 3, 15, 17, 30, 0)  # last week's newsletter already sent
-        sched = TASKS["newsletter"]["schedule"]
-        self.assertFalse(missed_slot_pending(last, sched, now))
+        self.assertFalse(newsletter_due(last, now))
+
+    def test_newsletter_sunday_evening_due(self):
+        now = datetime(2026, 3, 22, 18, 0, 0)  # Sunday 6pm
+        last = datetime(2026, 3, 15, 17, 30, 0)
+        self.assertTrue(newsletter_due(last, now))
+
+    def test_newsletter_not_due_saturday_even_if_slot_passed(self):
+        # Saturday 6:30pm; old missed_slot_pending would fire — newsletter must not
+        now = datetime(2026, 3, 28, 18, 30, 0)
+        self.assertFalse(newsletter_due(None, now))
 
     def test_countdown_daily_10am_due_after_10(self):
         now = datetime(2026, 3, 28, 11, 0, 0)  # Saturday 11am

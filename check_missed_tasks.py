@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Decide which automation scripts are due (scrape bundle, daily alerts, Sunday newsletter),
-run them once each, and record last success times in task_log.json. Intended to be invoked
-by macOS launchd; catch-up runs if a slot was missed while the machine was off.
+Decide which automation scripts are due (scrape bundle, daily alerts, weekly newsletter),
+run them once each, and record last success times in task_log.json. Invoked by macOS launchd.
+
+The newsletter is scheduled for Sunday 17:00 local time; catch-up is allowed on Monday only
+if Sunday was missed—never Tue–Sat, so the digest is not sent on the wrong weekday.
 """
+import fcntl
 import json
 import subprocess
 import sys
@@ -12,6 +15,7 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 TASK_LOG = SCRIPT_DIR / "task_log.json"
+SCHEDULER_LOCK = SCRIPT_DIR / ".check_missed_tasks.lock"
 
 # Python weekday(): Monday=0 … Sunday=6. (hour, minute) local time.
 TASKS = {
@@ -49,6 +53,21 @@ def save_task_log(log):
             json.dump(log, f, indent=2)
     except Exception as e:
         print(f"⚠️ Failed to save task log: {e}")
+
+
+def acquire_scheduler_lock():
+    """
+    Non-blocking exclusive lock so two launchd-triggered runs cannot overlap.
+    Without this, both can see the same 'due' tasks and send duplicate emails.
+    """
+    SCHEDULER_LOCK.parent.mkdir(parents=True, exist_ok=True)
+    fp = open(SCHEDULER_LOCK, "a+")
+    try:
+        fcntl.flock(fp.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        fp.close()
+        return None
+    return fp
 
 
 def parse_last_run(raw):
@@ -93,6 +112,33 @@ def missed_slot_pending(last_run: datetime | None, schedule, now: datetime) -> b
     return False
 
 
+def newsletter_due(last_run: datetime | None, now: datetime) -> bool:
+    """
+    True only on Sunday after 17:00 (this week's slot), or on Monday for catch-up after a missed
+    Sunday. False Tue–Sat so a 'weekly' email does not fire on e.g. Saturday night.
+    """
+    if last_run is None:
+        last_run = datetime.min
+
+    wd = now.weekday()  # Mon=0 … Sun=6
+
+    if wd in (1, 2, 3, 4, 5):  # Tue–Sat
+        return False
+
+    if wd == 6:  # Sunday
+        s = slot_datetime(now.date(), 17, 0)
+        if now < s:
+            return False
+        return last_run < s <= now
+
+    if wd == 0:  # Monday — catch up for the Sunday that just passed
+        prev_sun = now.date() - timedelta(days=1)
+        s = slot_datetime(prev_sun, 17, 0)
+        return last_run < s <= now
+
+    return False
+
+
 def run_task(task_key, task_config):
     script = task_config["script"]
     if not script.exists():
@@ -129,38 +175,56 @@ def main(dry_run: bool = False):
     else:
         print()
 
-    task_log = load_task_log()
-    ran_anything = False
-
-    # Tue/Fri: run_all before countdown_alerts
-    order = ["run_all", "countdown_alerts", "newsletter"]
-
-    for task_key in order:
-        if task_key not in TASKS:
-            continue
-        cfg = TASKS[task_key]
-        last_run = parse_last_run(task_log.get(task_key))
-
-        if not missed_slot_pending(last_run, cfg["schedule"], now):
-            print(f"  ✓ {task_key}: nothing due")
-            continue
-
-        print(f"  ⚠️  {task_key}: due (missed slot or not yet run for a passed slot)")
-        if dry_run:
-            print(f"  ⏭️  Would run {cfg['script'].name}")
-            ran_anything = True
-            continue
-        if run_task(task_key, cfg):
-            task_log[task_key] = datetime.now().isoformat(timespec="seconds")
-            ran_anything = True
-
+    lock_fp = None
     if not dry_run:
-        save_task_log(task_log)
+        lock_fp = acquire_scheduler_lock()
+        if lock_fp is None:
+            print("  ⏳ Another run is already in progress — skipping (avoids duplicate jobs/emails).\n")
+            return
 
-    if ran_anything:
-        print("\n✅ Scheduled tasks completed\n" if not dry_run else "\n✅ Dry-run: would have run tasks above\n")
-    else:
-        print("\n✓ Nothing to run right now\n")
+    try:
+        task_log = load_task_log()
+        ran_anything = False
+
+        # Tue/Fri: run_all before countdown_alerts
+        order = ["run_all", "countdown_alerts", "newsletter"]
+
+        for task_key in order:
+            if task_key not in TASKS:
+                continue
+            cfg = TASKS[task_key]
+            last_run = parse_last_run(task_log.get(task_key))
+
+            if task_key == "newsletter":
+                due = newsletter_due(last_run, now)
+            else:
+                due = missed_slot_pending(last_run, cfg["schedule"], now)
+
+            if not due:
+                print(f"  ✓ {task_key}: nothing due")
+                continue
+
+            print(f"  ⚠️  {task_key}: due (missed slot or not yet run for a passed slot)")
+            if dry_run:
+                print(f"  ⏭️  Would run {cfg['script'].name}")
+                ran_anything = True
+                continue
+            if run_task(task_key, cfg):
+                task_log[task_key] = datetime.now().isoformat(timespec="seconds")
+                ran_anything = True
+                save_task_log(task_log)
+
+        if ran_anything:
+            print("\n✅ Scheduled tasks completed\n" if not dry_run else "\n✅ Dry-run: would have run tasks above\n")
+        else:
+            print("\n✓ Nothing to run right now\n")
+    finally:
+        if lock_fp is not None:
+            try:
+                fcntl.flock(lock_fp.fileno(), fcntl.LOCK_UN)
+            except OSError:
+                pass
+            lock_fp.close()
 
 
 if __name__ == "__main__":

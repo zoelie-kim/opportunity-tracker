@@ -20,3 +20,4 @@ venv/
 # Runtime state (scheduler memory, alert history — do not commit)
 task_log.json
 alert_log.txt
+.check_missed_tasks.lock

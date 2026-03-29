@@ -21,8 +21,8 @@
 1. **Scrapers** (`scrape_yc.py`, `scrape_simplify.py`, `scrape_companies.py`) — fetch or drive listings, filter, write to Notion.
 2. **`run_all.py`** — runs the three scrapers in order; logs to `scraper.log`.
 3. **`countdown_alerts.py`** — reads program deadlines from Notion, sends reminder emails, appends lines to `alert_log.txt` for the newsletter.
-4. **`newsletter.py`** — builds the Sunday email: new roles, alert snippets, plus **`error_monitor`** output from `scraper.log` and `logs/*.log`.
-5. **`check_missed_tasks.py`** — decides what’s due (time slots + `task_log.json`), runs `run_all`, `countdown_alerts`, and `newsletter` when appropriate.
+4. **`newsletter.py`** — builds the digest email: new roles (Notion **Date Added**), `alert_log.txt` lines, and **`error_monitor`** log lines. After the first run, content is scoped **since the previous successful digest** via `task_log.json` → `newsletter` (not a blind rolling 7-day window from “today”).
+5. **`check_missed_tasks.py`** — decides what’s due (time slots + `task_log.json`), runs `run_all`, `countdown_alerts`, and `newsletter` when appropriate. Uses a **file lock** (`.check_missed_tasks.lock`) so overlapping `launchd` runs can’t send duplicate emails. The **weekly digest** is only scheduled for **Sunday after 5pm** (local time), with **Monday** as catch-up if Sunday was missed—not Tuesday–Saturday, so it won’t fire on the wrong night.
 6. **`install_launch_agent.sh` + `.plist`** — register the checker with macOS so it runs on login, on an interval, and at calendar times.
 
 Nothing runs in the cloud unless you add that yourself; if the Mac was asleep, the next run **catches up** missed slots.

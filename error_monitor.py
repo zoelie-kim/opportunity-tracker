@@ -48,12 +48,19 @@ def _discover_log_paths() -> list[Path]:
     return out
 
 
-def collect_error_events(lookback_days: int = 7, max_events: int = 25) -> list[dict]:
+def collect_error_events(
+    lookback_days: int = 7,
+    max_events: int = 25,
+    since: datetime | None = None,
+) -> list[dict]:
     """
-    Return recent error-like log lines, newest first. Each dict: source (filename),
-    time (datetime), text (truncated line).
+    Return error-like log lines, newest first. If ``since`` is set (last digest time),
+    only lines at or after that moment; otherwise use a rolling window of lookback_days.
     """
-    cutoff = datetime.now() - timedelta(days=lookback_days)
+    if since is not None:
+        cutoff = since
+    else:
+        cutoff = datetime.now() - timedelta(days=lookback_days)
     found: list[dict] = []
 
     for path in _discover_log_paths():
@@ -103,14 +110,16 @@ def collect_error_events(lookback_days: int = 7, max_events: int = 25) -> list[d
     return uniq
 
 
-def format_health_html(events: list[dict]) -> str:
+def format_health_html(events: list[dict], period_note: str) -> str:
     """HTML block for the newsletter: all clear, or a compact list of issues."""
     if not events:
         return (
             '<section style="margin-bottom: 28px; padding: 14px 16px; background-color: #e8f5e9; '
             'border-left: 4px solid #2e7d32; border-radius: 4px;">'
-            "<p style=\"margin: 0; color: #1b5e20;\"><strong>System health</strong> — "
-            "No errors in tracker logs for the past 7 days.</p></section>"
+            '<h2 style="margin: 0 0 8px 0; color: #1b5e20; font-size: 18px;">System health (0 issues)</h2>'
+            "<p style=\"margin: 0; color: #1b5e20;\">"
+            f"No error lines matched in <code>scraper.log</code> or <code>logs/*.log</code> ({period_note})."
+            "</p></section>"
         )
 
     rows = []
@@ -131,14 +140,18 @@ def format_health_html(events: list[dict]) -> str:
             System health ({len(events)} issue{"s" if len(events) != 1 else ""})
         </h2>
         <p style="color: #555; font-size: 14px; margin: 0 0 12px 0;">
-            Recent error lines from <code>scraper.log</code> and <code>logs/*.log</code> (last 7 days).
+            Error lines from <code>scraper.log</code> and <code>logs/*.log</code> ({period_note}).
         </p>
         <ul style="padding-left: 18px; margin: 0;">{"".join(rows)}</ul>
     </section>
     '''
 
 
-def build_weekly_health_html() -> tuple[str, int]:
-    """Returns (html_fragment, error_count) for the newsletter."""
-    events = collect_error_events()
-    return format_health_html(events), len(events)
+def build_weekly_health_html(since: datetime | None = None) -> tuple[str, int]:
+    """Returns (html_fragment, error_count). Pass ``since`` = last digest time to scope errors."""
+    events = collect_error_events(since=since)
+    if since is not None:
+        period_note = "since last digest"
+    else:
+        period_note = "past 7 days (no prior digest in task log)"
+    return format_health_html(events, period_note=period_note), len(events)
