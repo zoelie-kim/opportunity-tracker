@@ -1,0 +1,6 @@
+httpx>=0.28
+beautifulsoup4>=4.14
+python-dotenv>=1.2
+playwright>=1.58
+# Optional: enables stealth mode in scrape_companies.py
+# playwright-stealth
