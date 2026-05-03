@@ -10,6 +10,15 @@ PLIST_DST="$AGENT_DIR/com.zoelie.opportunity-tracker.check-missed-tasks.plist"
 chmod +x "$ROOT/run_check_missed_tasks.sh"
 mkdir -p "$ROOT/logs"
 
+# Create/refresh the venv so launchd always uses the right Python with all packages installed.
+# run_check_missed_tasks.sh activates venv/bin/activate when present.
+echo "Setting up Python virtual environment..."
+python3 -m venv "$ROOT/venv"
+"$ROOT/venv/bin/pip" install --upgrade pip --quiet
+"$ROOT/venv/bin/pip" install -r "$ROOT/requirements.txt" --quiet
+"$ROOT/venv/bin/python" -m playwright install chromium
+echo "Virtual environment ready."
+
 cp "$PLIST_SRC" "$PLIST_DST"
 UID_NUM="$(id -u)"
 launchctl bootout "gui/${UID_NUM}" "$PLIST_DST" 2>/dev/null || true
