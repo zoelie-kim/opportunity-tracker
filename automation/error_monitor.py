@@ -93,7 +93,7 @@ def collect_error_events(
                 {
                     "source": path.name,
                     "time": effective,
-                    "text": (line.strip())[:420],
+                    "text": (line.strip())[:2000],
                 }
             )
             if len(found) >= max_events * 3:

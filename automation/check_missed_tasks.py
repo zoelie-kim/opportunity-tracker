@@ -162,7 +162,7 @@ def run_task(task_key, task_config):
             return True
         print(f"  ❌ {task_key} failed with code {result.returncode}")
         if result.stderr:
-            print(f"     Error: {result.stderr.decode()[:500]}")
+            print(f"     Error: {result.stderr.decode()[:2000]}")
         return False
     except subprocess.TimeoutExpired:
         print(f"  ❌ {task_key} timed out")
