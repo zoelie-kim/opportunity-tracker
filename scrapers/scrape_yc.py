@@ -142,7 +142,7 @@ def scrape_text(job_page, selectors):
 def get_job_details(context, job_url):
     try:
         job_page = context.new_page()
-        job_page.goto(job_url, wait_until="networkidle", timeout=20000)
+        job_page.goto(job_url, wait_until="load", timeout=20000)
         time.sleep(1)
 
         company = scrape_text(job_page, [
@@ -234,14 +234,14 @@ with sync_playwright() as p:
     )
     page = context.new_page()
 
-    page.goto("https://account.ycombinator.com/", wait_until="networkidle", timeout=30000)
+    page.goto("https://account.ycombinator.com/", wait_until="load", timeout=30000)
     time.sleep(2)
     page.fill("#ycid-input", YC_EMAIL)
     page.fill("#password-input", YC_PASSWORD)
     page.click("button:has-text('Log In')")
     time.sleep(4)
 
-    page.goto("https://www.workatastartup.com", wait_until="networkidle", timeout=30000)
+    page.goto("https://www.workatastartup.com", wait_until="load", timeout=30000)
     time.sleep(2)
     try:
         page.click("a:has-text('Log In')", timeout=5000)
@@ -252,7 +252,7 @@ with sync_playwright() as p:
 
     for url in INTERN_URLS:
         print(f"Fetching: {url[:80]}...")
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        page.goto(url, wait_until="load", timeout=30000)
         time.sleep(2)
 
         for _ in range(10):

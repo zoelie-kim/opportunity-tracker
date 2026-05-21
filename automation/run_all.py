@@ -21,8 +21,16 @@ def log(msg):
         f.write(line + "\n")
 
 
+TIMEOUTS = {
+    "scrape_yc.py": 7200,       # YC scraper visits many pages; successful runs take ~1 hr
+    "scrape_simplify.py": 300,
+    "scrape_companies.py": 3600,
+}
+
+
 def run_scraper(filename: str):
     script = SCRAPERS / filename
+    timeout = TIMEOUTS.get(filename, 3600)
     log(f"Starting {filename}...")
     try:
         result = subprocess.run(
@@ -30,7 +38,7 @@ def run_scraper(filename: str):
             cwd=str(REPO_ROOT),
             capture_output=True,
             text=True,
-            timeout=300,
+            timeout=timeout,
         )
         if result.returncode == 0:
             log(f"✅ {filename} completed")
@@ -39,9 +47,9 @@ def run_scraper(filename: str):
                 log(f"   {lines[-1]}")
         else:
             log(f"❌ {filename} failed")
-            log(f"   {result.stderr.strip()[:200]}")
+            log(f"   {result.stderr.strip()[:2000]}")
     except subprocess.TimeoutExpired:
-        log(f"❌ {filename} timed out after 5 minutes")
+        log(f"❌ {filename} timed out after {timeout // 60} minutes")
     except Exception as e:
         log(f"❌ {filename} error: {str(e)}")
 
