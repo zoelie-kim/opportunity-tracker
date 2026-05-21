@@ -16,15 +16,20 @@ from paths import REPO_ROOT
 
 LOGS_DIR = REPO_ROOT / "logs"
 
-# Timestamps written by run_all / check_missed_tasks style loggers
+# scraper.log / run_all.py format:  [2026-05-01 10:34:25] ...
 _TS = re.compile(r"^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]")
+# check_missed_tasks.log format:    🔍 ... schedule check at 2026-05-21T10:00:05
+_TS_ISO = re.compile(r"schedule check at (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})")
 
 
 def _parse_line_ts(line: str) -> datetime | None:
     m = _TS.match(line.strip())
-    if not m:
-        return None
-    return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
+    if m:
+        return datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")
+    m = _TS_ISO.search(line)
+    if m:
+        return datetime.fromisoformat(m.group(1))
+    return None
 
 
 def line_looks_like_error(line: str) -> bool:
