@@ -124,12 +124,15 @@ def get_existing_links():
     return existing
 
 def update_last_checked(page_id):
-    httpx.patch(
-        f"https://api.notion.com/v1/pages/{page_id}",
-        headers=notion_headers,
-        json={"properties": {"Last Checked": {"date": {"start": date.today().isoformat()}}}},
-        timeout=30.0
-    )
+    try:
+        httpx.patch(
+            f"https://api.notion.com/v1/pages/{page_id}",
+            headers=notion_headers,
+            json={"properties": {"Last Checked": {"date": {"start": date.today().isoformat()}}}},
+            timeout=30.0
+        )
+    except Exception:
+        pass  # non-fatal: timestamp update failure shouldn't abort the whole run
 
 def add_to_notion(company, title, link, location="", source=""):
     properties = {
@@ -156,7 +159,7 @@ def scrape_greenhouse(page, company, board_id, existing_links):
     added = 0
     try:
         url = f"https://job-boards.greenhouse.io/{board_id}"
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        page.goto(url, wait_until="load", timeout=30000)
         time.sleep(2)
 
         def process_current_page():
@@ -209,7 +212,7 @@ def scrape_ashby(page, company, board_id, existing_links):
     added = 0
     try:
         url = f"https://jobs.ashbyhq.com/{board_id}"
-        page.goto(url, wait_until="networkidle", timeout=30000)
+        page.goto(url, wait_until="load", timeout=30000)
         time.sleep(2)
 
         # Scroll to load all jobs

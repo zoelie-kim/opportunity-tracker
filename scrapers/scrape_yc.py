@@ -234,14 +234,14 @@ with sync_playwright() as p:
     )
     page = context.new_page()
 
-    page.goto("https://account.ycombinator.com/", wait_until="load", timeout=30000)
+    page.goto("https://account.ycombinator.com/", wait_until="load", timeout=60000)
     time.sleep(2)
     page.fill("#ycid-input", YC_EMAIL)
     page.fill("#password-input", YC_PASSWORD)
     page.click("button:has-text('Log In')")
     time.sleep(4)
 
-    page.goto("https://www.workatastartup.com", wait_until="load", timeout=30000)
+    page.goto("https://www.workatastartup.com", wait_until="load", timeout=60000)
     time.sleep(2)
     try:
         page.click("a:has-text('Log In')", timeout=5000)
@@ -252,7 +252,7 @@ with sync_playwright() as p:
 
     for url in INTERN_URLS:
         print(f"Fetching: {url[:80]}...")
-        page.goto(url, wait_until="load", timeout=30000)
+        page.goto(url, wait_until="load", timeout=60000)
         time.sleep(2)
 
         for _ in range(10):
