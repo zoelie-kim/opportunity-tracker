@@ -343,13 +343,25 @@ def scrape_career_page(page, company, url, existing_links):
     except Exception as e:
         return 0, str(e)[:60]
 
+def _with_retry(fn, retries=3):
+    """Call fn(), retrying up to `retries` times on any exception with backoff."""
+    for attempt in range(retries):
+        try:
+            return fn()
+        except Exception as e:
+            if attempt == retries - 1:
+                raise
+            wait = 2 ** attempt
+            print(f"  ⚠️ {fn.__name__} failed (attempt {attempt + 1}/{retries}), retrying in {wait}s: {e}")
+            time.sleep(wait)
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 print("\n🔍 Scraping tracked companies...\n")
 print(f"Stealth mode: {'✅ enabled' if STEALTH else '⚠️ not installed'}\n")
 
-companies = get_companies()
-existing_links = get_existing_links()
+companies = _with_retry(get_companies)
+existing_links = _with_retry(get_existing_links)
 print(f"Checking {len(companies)} active companies | {len(existing_links)} existing entries\n")
 
 total_added = 0
