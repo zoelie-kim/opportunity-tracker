@@ -12,14 +12,23 @@ mkdir -p "$ROOT/logs"
 
 # Create/refresh the venv so launchd always uses the right Python with all packages installed.
 # run_check_missed_tasks.sh activates venv/bin/activate when present.
+#
+# --clear rebuilds from scratch rather than "upgrading" in place. A venv hardcodes absolute
+# paths in bin/activate and every bin/ shebang, so without it a venv left over from a previous
+# repo location keeps pointing at the old path: activate silently falls back to system python
+# and bin/pip dies with "bad interpreter".
 echo "Setting up Python virtual environment..."
-python3 -m venv "$ROOT/venv"
+python3 -m venv --clear "$ROOT/venv"
 "$ROOT/venv/bin/pip" install --upgrade pip --quiet
 "$ROOT/venv/bin/pip" install -r "$ROOT/requirements.txt" --quiet
 "$ROOT/venv/bin/python" -m playwright install chromium
 echo "Virtual environment ready."
 
-cp "$PLIST_SRC" "$PLIST_DST"
+# The plist ships with a __REPO_ROOT__ placeholder rather than a hardcoded path, so the
+# installed agent always points at wherever this repo actually lives. A verbatim copy here
+# is what silently broke scheduling after the repo was moved: launchd kept running the old
+# path, failing, and recreating a stray logs/ dir next to it.
+sed "s|__REPO_ROOT__|$ROOT|g" "$PLIST_SRC" > "$PLIST_DST"
 UID_NUM="$(id -u)"
 launchctl bootout "gui/${UID_NUM}" "$PLIST_DST" 2>/dev/null || true
 if launchctl bootstrap "gui/${UID_NUM}" "$PLIST_DST" 2>/dev/null; then

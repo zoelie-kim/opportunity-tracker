@@ -7,10 +7,10 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/bin/bash</string>
-		<string>/Users/zoeliekim/opportunity-tracker/run_check_missed_tasks.sh</string>
+		<string>__REPO_ROOT__/run_check_missed_tasks.sh</string>
 	</array>
 	<key>WorkingDirectory</key>
-	<string>/Users/zoeliekim/opportunity-tracker</string>
+	<string>__REPO_ROOT__</string>
 	<key>RunAtLoad</key>
 	<true/>
 	<key>StartInterval</key>
@@ -83,9 +83,9 @@
 		</dict>
 	</array>
 	<key>StandardOutPath</key>
-	<string>/Users/zoeliekim/opportunity-tracker/logs/check_missed_tasks.log</string>
+	<string>__REPO_ROOT__/logs/check_missed_tasks.log</string>
 	<key>StandardErrorPath</key>
-	<string>/Users/zoeliekim/opportunity-tracker/logs/check_missed_tasks.error.log</string>
+	<string>__REPO_ROOT__/logs/check_missed_tasks.error.log</string>
 	<key>EnvironmentVariables</key>
 	<dict>
 		<key>PYTHONUNBUFFERED</key>
