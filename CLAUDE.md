@@ -40,6 +40,21 @@ macOS launchd runs `run_check_missed_tasks.sh` → `automation/check_missed_task
 
 The scheduler uses `task_log.json` to track last successful run per task and looks back 21 days to catch missed runs when the Mac was asleep.
 
+### Where this repo may live (macOS TCC)
+
+**Do not put this repo under `~/Documents`, `~/Desktop`, or `~/Downloads`.** macOS TCC protects
+those folders, and a launchd agent has no grant for them — the job dies with
+`Operation not permitted` before the script runs, and launchd reports exit 78 with an *empty*
+stderr log, so the failure is completely silent. Interactive runs from Terminal keep working
+(Terminal has its own grant), which makes this especially easy to miss. It currently lives at
+`~/projects/opportunity-tracker`.
+
+Two things bake in an absolute path and must be regenerated after any move — `./install_launch_agent.sh`
+handles both:
+
+- the installed plist (generated from the `__REPO_ROOT__` placeholder, never copied verbatim)
+- `venv/` (rebuilt with `python3 -m venv --clear`; a plain `venv` call leaves stale shebangs)
+
 ## Runtime Files (gitignored)
 
 | File | Purpose |
@@ -63,10 +78,15 @@ NOTION_EVENTS_DB_ID=         # Events database
 YC_EMAIL=                    # Y Combinator account
 YC_PASSWORD=
 
-GMAIL_ADDRESS=               # Sender Gmail account
-GMAIL_APP_PASSWORD=          # Gmail app-specific password (not your regular password)
+RESEND_API_KEY=              # Shared with the `newsletter` project — same Resend account
+RESEND_FROM=                 # Optional sender override; defaults to opportunities@zoeliekim.com
 ALERT_EMAIL=                 # Recipient address for alerts/digest
 ```
+
+Outbound mail goes through Resend via `automation/emailer.py` (one shared `send_email` used by
+both `newsletter.py` and `countdown_alerts.py`). The sender domain `zoeliekim.com` is verified in
+Resend, so any local part at that domain works. The old `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD`
+SMTP path was removed; those two vars are dead and can be deleted from `.env`.
 
 ## Setup
 
