@@ -243,7 +243,7 @@ def main():
     end = date.today()
     using_last = last_digest is not None
 
-    health_html, err_count = build_weekly_health_html(since=last_digest)
+    health_html, issue_count = build_weekly_health_html(since=last_digest)
     jobs = get_jobs_on_or_after(start)
     alerts = read_alert_log_on_or_after(start)
 
@@ -254,7 +254,8 @@ def main():
         f"  Window: {start.isoformat()} through {end.isoformat()} (jobs & alerts by date ≥ start)"
     )
     print(
-        f"  Health: {err_count} error line(s) in logs ({'since last digest' if last_digest else 'past 7 days'})"
+        f"  Health: {issue_count} issue(s) — error lines "
+        f"({'since last digest' if last_digest else 'past 7 days'}) plus any stalled tasks"
     )
     print(f"  Found {len(jobs)} new roles")
     print(f"  Found {len(alerts)} reminder alerts")

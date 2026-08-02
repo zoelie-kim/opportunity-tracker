@@ -11,7 +11,7 @@ opportunity-tracker/
 │   ├── run_all.py              # Runs all 3 scrapers sequentially
 │   ├── countdown_alerts.py     # Daily email reminders for program deadlines
 │   ├── newsletter.py           # Weekly HTML digest email (Sunday 5pm)
-│   ├── error_monitor.py        # Scans logs for errors → health section in newsletter
+│   ├── error_monitor.py        # Scans logs for errors + flags stalled tasks → newsletter health
 │   └── verify_setup.py         # One-time validation of installation
 ├── scrapers/                # Job/internship scraping scripts
 │   ├── scrape_yc.py            # Y Combinator Work at a Startup (Playwright + login)
@@ -140,7 +140,13 @@ python -m unittest discover -s tests -v
 1. **Scrapers** pull new internships → Notion Jobs DB
 2. **countdown_alerts** checks Notion Programs DB daily → sends email + appends to `alert_log.txt`
 3. **newsletter** reads Jobs DB + `alert_log.txt` + logs → sends weekly HTML digest
-4. **error_monitor** scans `scraper.log` + `logs/*.log` for failure patterns → health section in newsletter
+4. **error_monitor** scans `scraper.log` + `logs/*.log` for failure patterns, and checks
+   `task_log.json` for tasks that have stopped recording successes → health section in newsletter
+
+   The two catch opposite things. Log scanning finds noise (a task that ran and failed loudly);
+   staleness finds silence (a task that never started, so wrote no error line at all). Note the
+   staleness check ships inside the newsletter, so it cannot report a failure that also stops
+   the newsletter — total scheduler death still needs an off-machine watchdog.
 
 ## Key Design Notes
 
