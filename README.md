@@ -32,6 +32,8 @@ Data files (`task_log.json`, `alert_log.txt`, `scraper.log`, `logs/`) stay at th
 
 ## Architecture (high level)
 
+![Opportunity Tracker architecture: launchd wakes a scheduler every 15 minutes, which runs a scraper bundle Tue/Fri, deadline alerts daily, and a digest email Sunday](docs/architecture.svg)
+
 1. **Scrapers** (`scrapers/`) — fetch or drive listings, filter, write to Notion.
 2. **`automation/run_all.py`** — runs the three scrapers in order; logs to `scraper.log` at repo root.
 3. **`automation/countdown_alerts.py`** — reads program deadlines from Notion, sends reminder emails, appends lines to `alert_log.txt` for the newsletter.

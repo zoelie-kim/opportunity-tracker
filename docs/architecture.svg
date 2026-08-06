@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 1060" role="img" aria-labelledby="title desc">
+  <title id="title">Opportunity Tracker architecture</title>
+  <desc id="desc">macOS launchd wakes a scheduler every 15 minutes. The scheduler reads task_log.json to decide which of three jobs is due: a scraper run on Tuesday and Friday, deadline alerts daily, and a digest email on Sunday. Scrapers write matched roles to a Notion jobs database, the alert job turns program dates into reminder lines, and an error monitor checks both the logs and task_log.json for failures. All three feed a weekly digest that goes out through Resend.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#a9a49c"/>
+    </marker>
+    <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="1060" fill="#fdfdfc"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+     stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- ============ trigger ============ -->
+    <rect x="400" y="40" width="360" height="56" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="66" text-anchor="middle" font-size="14" font-weight="600" fill="#1a1a1a">macOS launchd</text>
+    <text x="580" y="84" text-anchor="middle" font-size="10.5" fill="#6b6660">run_check_missed_tasks.sh · every 15 min</text>
+
+    <line x1="580" y1="96" x2="580" y2="128" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="590" y="116" font-size="10" fill="#6b6660">wakes</text>
+
+    <!-- ============ scheduler ============ -->
+    <rect x="360" y="130" width="440" height="84" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="155" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1a1a1a">automation/check_missed_tasks.py</text>
+    <text x="580" y="176" text-anchor="middle" font-size="10.5" fill="#6b6660">flock guard — overlapping ticks can't double-send</text>
+    <text x="580" y="195" text-anchor="middle" font-size="10.5" fill="#6b6660">21-day lookback catches slots missed while asleep</text>
+
+    <rect x="900" y="138" width="200" height="66" rx="8" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="1000" y="166" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a1a">task_log.json</text>
+    <text x="1000" y="184" text-anchor="middle" font-size="9.5" fill="#6b6660">last success per task</text>
+
+    <line x1="896" y1="164" x2="806" y2="164" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="851" y="156" text-anchor="middle" font-size="9.5" fill="#6b6660">last run times</text>
+    <line x1="806" y1="190" x2="896" y2="190" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="851" y="206" text-anchor="middle" font-size="9.5" fill="#6b6660">records success</text>
+
+    <!-- ============ fan-out: what is due ============ -->
+    <line x1="580" y1="214" x2="580" y2="250" stroke="#b45309" stroke-width="1.5"/>
+    <text x="590" y="236" font-size="10" fill="#6b6660">what's due?</text>
+    <line x1="250" y1="250" x2="910" y2="250" stroke="#b45309" stroke-width="1.5"/>
+    <line x1="250" y1="250" x2="250" y2="292" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+    <line x1="580" y1="250" x2="580" y2="292" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+    <line x1="910" y1="250" x2="910" y2="292" stroke="#b45309" stroke-width="1.5" marker-end="url(#arrowAccent)"/>
+    <text x="258" y="276" font-size="10" font-weight="600" fill="#b45309">Tue &amp; Fri 10:00</text>
+    <text x="588" y="276" font-size="10" font-weight="600" fill="#b45309">daily 10:00</text>
+    <text x="918" y="276" font-size="10" font-weight="600" fill="#b45309">Sun 17:00 · Mon catch-up</text>
+
+    <!-- ============ the three jobs ============ -->
+    <rect x="110" y="294" width="280" height="60" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="250" y="319" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">automation/run_all.py</text>
+    <text x="250" y="338" text-anchor="middle" font-size="10" fill="#6b6660">runs the three scrapers in order</text>
+
+    <rect x="440" y="294" width="280" height="60" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="319" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">automation/countdown_alerts.py</text>
+    <text x="580" y="338" text-anchor="middle" font-size="10" fill="#6b6660">deadline &amp; opening reminders</text>
+
+    <rect x="770" y="294" width="280" height="60" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="910" y="319" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">automation/newsletter.py</text>
+    <text x="910" y="338" text-anchor="middle" font-size="10" fill="#6b6660">weekly HTML digest</text>
+
+    <!-- ============ lane A — scrapers ============ -->
+    <line x1="250" y1="354" x2="250" y2="396" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="258" y="378" font-size="9.5" fill="#6b6660">in order</text>
+
+    <rect x="110" y="398" width="280" height="52" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="250" y="422" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a1a">scrape_yc.py</text>
+    <text x="250" y="439" text-anchor="middle" font-size="9.5" fill="#6b6660">YC Work at a Startup · Playwright login</text>
+
+    <line x1="250" y1="450" x2="250" y2="464" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="110" y="466" width="280" height="52" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="250" y="490" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a1a">scrape_simplify.py</text>
+    <text x="250" y="507" text-anchor="middle" font-size="9.5" fill="#6b6660">SimplifyJobs README · BeautifulSoup</text>
+
+    <line x1="250" y1="518" x2="250" y2="532" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="110" y="534" width="280" height="52" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="250" y="558" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a1a">scrape_companies.py</text>
+    <text x="250" y="575" text-anchor="middle" font-size="9.5" fill="#6b6660">tracked companies → Greenhouse · Ashby · Workday</text>
+
+    <line x1="250" y1="586" x2="250" y2="630" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="258" y="612" font-size="9.5" fill="#6b6660">matched roles</text>
+
+    <rect x="110" y="632" width="280" height="58" rx="8" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="250" y="658" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1a1a1a">Notion — Jobs DB</text>
+    <text x="250" y="676" text-anchor="middle" font-size="9.5" fill="#6b6660">new rows, de-duped by link</text>
+
+    <!-- ============ lane B — countdown alerts ============ -->
+    <line x1="580" y1="354" x2="580" y2="396" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="588" y="378" font-size="9.5" fill="#6b6660">reads deadlines</text>
+
+    <rect x="440" y="398" width="280" height="52" rx="8" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="422" text-anchor="middle" font-size="12" font-weight="600" fill="#1a1a1a">Notion — Programs DB</text>
+    <text x="580" y="439" text-anchor="middle" font-size="9.5" fill="#6b6660">Opens On · Deadline · Alert Days Before</text>
+
+    <line x1="580" y1="450" x2="580" y2="630" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="588" y="545" font-size="9.5" fill="#6b6660">each date that comes due</text>
+
+    <rect x="440" y="632" width="280" height="58" rx="8" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="658" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1a1a1a">alert_log.txt</text>
+    <text x="580" y="676" text-anchor="middle" font-size="9.5" fill="#6b6660">one line per alert fired</text>
+
+    <!-- same-day reminder mail: leaves the pipeline early, sent immediately -->
+    <polyline points="580,500 415,500 415,846 460,846 460,866" fill="none" stroke="#a9a49c" stroke-width="1.5"
+              stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+    <text x="408" y="660" text-anchor="middle" font-size="9.5" fill="#6b6660" transform="rotate(-90 408 660)">reminder email · same day</text>
+
+    <!-- ============ lane C — health ============ -->
+    <line x1="910" y1="354" x2="910" y2="396" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="918" y="378" font-size="9.5" fill="#6b6660">asks for a health block</text>
+
+    <rect x="770" y="398" width="280" height="68" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="910" y="422" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1a1a1a">automation/error_monitor.py</text>
+    <text x="910" y="440" text-anchor="middle" font-size="9.5" fill="#6b6660">scans scraper.log + logs/*.log for errors</text>
+    <text x="910" y="456" text-anchor="middle" font-size="9.5" fill="#6b6660">and task_log.json for silence</text>
+
+    <!-- the non-obvious edge: a task that dies quietly logs nothing, so only task_log betrays it -->
+    <polyline points="1100,175 1140,175 1140,432 1054,432" fill="none" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="1128" y="330" text-anchor="middle" font-size="9.5" fill="#6b6660" transform="rotate(-90 1128 330)">tasks that stopped running</text>
+
+    <polyline points="910,466 910,712 680,712 680,756" fill="none" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="918" y="560" font-size="9.5" fill="#6b6660">system health block</text>
+
+    <!-- ============ digest and send ============ -->
+    <polyline points="250,690 250,730 480,730 480,756" fill="none" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="258" y="714" font-size="9.5" fill="#6b6660">new roles since last digest</text>
+
+    <line x1="580" y1="690" x2="580" y2="756" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+    <text x="588" y="724" font-size="9.5" fill="#6b6660">reminder lines</text>
+
+    <rect x="430" y="758" width="300" height="64" rx="8" fill="#f4f2ee" stroke="#c9c5be" stroke-width="1.5"/>
+    <text x="580" y="784" text-anchor="middle" font-size="13" font-weight="600" fill="#1a1a1a">Weekly digest email</text>
+    <text x="580" y="803" text-anchor="middle" font-size="9.5" fill="#6b6660">new roles · reminders · system health</text>
+
+    <line x1="580" y1="822" x2="580" y2="866" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="400" y="868" width="360" height="58" rx="8" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="893" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1a1a1a">automation/emailer.py</text>
+    <text x="580" y="911" text-anchor="middle" font-size="9.5" fill="#6b6660">one POST to the Resend API</text>
+
+    <line x1="580" y1="926" x2="580" y2="962" stroke="#a9a49c" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+    <rect x="440" y="964" width="280" height="54" rx="8" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="580" y="990" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1a1a1a">your inbox</text>
+    <text x="580" y="1008" text-anchor="middle" font-size="9.5" fill="#6b6660">ALERT_EMAIL</text>
+
+    <!-- ============ legend ============ -->
+    <rect x="60" y="966" width="16" height="12" rx="3" fill="#ffffff" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="84" y="976" font-size="9" fill="#6b6660">script</text>
+    <rect x="60" y="988" width="16" height="12" rx="3" fill="#f4f2ee" stroke="#d9d6d0" stroke-width="1.25"/>
+    <text x="84" y="998" font-size="9" fill="#6b6660">stored data</text>
+    <line x1="60" y1="1016" x2="76" y2="1016" stroke="#a9a49c" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="84" y="1019" font-size="9" fill="#6b6660">sent immediately</text>
+
+  </g>
+</svg>
